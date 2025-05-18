@@ -1,0 +1,36 @@
+suite: scaledobject tests
+
+set:
+  image.repository: fathom/coolkit
+
+templates:
+  - scaledobject.yaml
+
+tests:
+  - it: is skipped when replicas are set
+    set:
+      replicas: 2
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: can be configured
+    set:
+      autoscaling:
+        one: two
+        three: four
+    asserts:
+      # new values show up
+      - equal:
+          path: spec.one
+          value: two
+      - equal:
+          path: spec.three
+          value: four
+      # hardcoded values aren't wiped
+      - equal:
+          path: spec.scaleTargetRef
+          value:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: RELEASE-NAME

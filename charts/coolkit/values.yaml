@@ -1,0 +1,73 @@
+args: []
+env: []
+envFrom: []
+
+autoscaling:
+
+cloudsqlproxy:
+  enabled: false
+  instanceConnectionName: ""
+  image:
+    repository: gcr.io/cloud-sql-connectors/cloud-sql-proxy
+    tag: 2.14.1
+    hash: ""
+  resources:
+    requests:
+      memory: 2Gi
+      cpu: 1000m
+
+image:
+  repository: "fathom/coolkit"
+  tag: ""
+  hash: ""
+
+probes:
+  startup:
+    httpGet:
+      port: metrics
+      path: /healthz
+    initialDelaySeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
+    periodSeconds: 10
+    timeoutSeconds: 3
+  liveness:
+    httpGet:
+      port: metrics
+      path: /healthz
+    initialDelaySeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
+    periodSeconds: 10
+    timeoutSeconds: 3
+  readiness:
+    httpGet:
+      port: metrics
+      path: /healthz
+    initialDelaySeconds: 1
+    successThreshold: 1
+    failureThreshold: 3
+    periodSeconds: 10
+    timeoutSeconds: 3
+
+replicas:
+
+resources:
+  requests:
+    cpu: 2000m
+    memory: 4Gi
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+
+service:
+  ports:
+    api: 8080
+    metrics: 2345
+  type: ClusterIP
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: "25%"
+    maxUnavailable: "25%"

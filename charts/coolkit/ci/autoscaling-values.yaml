@@ -1,0 +1,9 @@
+autoscaling:
+  minReplicaCount: 10
+  maxReplicaCount: 100
+  triggers:
+    - type: metrics-api
+      metadata:
+        url: http://scaler.production.svc.cluster.local/estimate/coolkit
+        valueLocation: prod.pod-estimate
+        targetValue: "35"

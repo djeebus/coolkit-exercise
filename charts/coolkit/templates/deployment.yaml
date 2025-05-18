@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "coolkit.deployment-name" . }}
+  labels: {{ include "coolkit.labels" . | nindent 4 }}
+spec:
+  {{ with .Values.replicas }}
+  replicas: {{ . }}
+  {{ end }}
+  {{ with .Values.strategy }}
+  strategy: {{ . | toYaml | nindent 4 }}
+  {{ end }}
+  selector:
+    matchLabels: {{ include "coolkit.match-labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{ include "coolkit.labels" . | nindent 8 }}
+    spec:
+      {{ if .Values.cloudsqlproxy.enabled }}
+      initContainers:
+        - name: cloud-sql-proxy
+          restartPolicy: Always
+          image: {{ include "coolkit.image" .Values.cloudsqlproxy.image }}
+          args:
+            - "--auto-iam-authn"
+            - "{{ .Values.cloudsqlproxy.instanceConnectionName | required "must define .cloudsqlproxy.instanceConnectionName" }}"
+            - "--credentials-file=/var/run/secrets/kubernetes.io/serviceaccount/token"
+          {{ with .Values.cloudsqlproxy.resources }}
+          resources: {{ . | toYaml | nindent 12 }}
+          {{ end }}
+          securityContext:
+            runAsNonRoot: true
+      {{ end }}
+      containers:
+        - name: coolkit
+          image: {{ include "coolkit.image" .Values.image }}
+          {{ with .Values.args }}
+          args: {{ . | toYaml | nindent 12 }}
+          {{ end }}
+          env:
+            - name: COOLKIT_SERVICE_NAME
+              value: {{ include "coolkit.service-name" . }}
+          {{ with .Values.env }}
+          {{ . | toYaml | nindent 12 }}
+          {{ end }}
+          {{ with .Values.envFrom }}
+          envFrom: {{ . | toYaml | nindent 12 }}
+          {{ end }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: api
+              containerPort: {{ .Values.service.ports.api }}
+            - name: metrics
+              containerPort: {{ .Values.service.ports.metrics }}
+          securityContext:
+            runAsNonRoot: true
+          {{ with .Values.resources }}
+          resources: {{ . | toYaml | nindent 12 }}
+          {{ end -}}
+
+          {{ include "coolkit.probe" (dict "key" "startup" "Values" .Values) | nindent 10 }}
+
+          {{ include "coolkit.probe" (dict "key" "readiness" "Values" .Values) | nindent 10 }}
+
+          {{ include "coolkit.probe" (dict "key" "liveness" "Values" .Values) | nindent 10 }}
+      restartPolicy: Always
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: {{ include "coolkit.serviceaccount-name" . }}
+      automountServiceAccountToken: true

@@ -1,0 +1,26 @@
+args:
+  - --one
+  - two
+  - -t
+
+cloudsqlproxy:
+  enabled: true
+  instanceConnectionName: connection-name
+
+env:
+  - name: COOL_ONE
+    value: "1"
+  - name: COOL_TWO
+    valueFrom:
+      secretKeyRef:
+        name: cool-secret
+        key: secret-one
+
+envFrom:
+  - secretRef:
+      name: cool-secret-env
+
+image:
+  repository: one
+  tag: two
+  hash: sha256:three
