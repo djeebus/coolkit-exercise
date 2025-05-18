@@ -1,4 +1,21 @@
-Notes:
+# Testing
+
+This relies on installing a few tools:
+1. [helm 3.17.3](https://github.com/helm/helm/releases/tag/v3.17.3)
+2. [helm-ct 3.11.0](https://github.com/helm/chart-testing/releases/tag/v3.11.0)
+3. [helm-unittest 0.8.2](https://github.com/helm-unittest/helm-unittest/releases/tag/v0.8.2)
+
+You can use asdf/mise to install helm and helm-ct, then use helm itself to install helm unittest.
+
+After installing all these tools, you can run:
+
+    ct lint --all 
+
+Alternately, you can test using docker:
+
+    docker build . -t coolkit:dev && docker run -v `realpath .`:/src coolkit:dev ct lint --all 
+
+# Notes
 1. It wasn't clear if "SHA tags" meant "tags that were commit shas" or "tags 
    that were pinned to a sha", so I supported both.
 2. It wasn't clear what "communicate with each other" meant, but a Service 
